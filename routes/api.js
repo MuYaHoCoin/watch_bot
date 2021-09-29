@@ -23,25 +23,34 @@ router.get("/getConfirmations/:txid", (req, res) => {
     body: dataString
   };
   callback = (error, response, body) => {
+    let per;
     if (!error && response.statusCode == 200) {
       const data = JSON.parse(body);
-      res.send({ confirmations: data.result.confirmations });
-      console.log(data.result.confirmations);
+      
+      per = parseInt(data.result.confirmations/6*100);
+      if(per >= 100) {
+        console.log("This transaction is complete!");
+      } else {
+        console.log("transaction progress : ", per, "%");
+      }
       //console.log(data.result.vout[1].scriptPubKey.addresses);
       //console.log(data.result.vin[0].txid);
+      res.send({ confirmations: data.result.confirmations });
     }
   }; request(options, callback);
 });
 
 router.get("/validtx/:addr/:val", (req, res) => {
+  console.log("searching mempool...");
   let count = 0;
   mempoolController.getRawMempools().then(async (e) => {
     for (let i = 0; i < e.length; i++) {
       const vouts = await mempoolController.getAddresByTxid(e[i]);
-      //console.log("txid : ", e[i], "address : ", addr);
+      console.log("txid : ", e[i]);
       vouts.forEach(element => {
         if (element.value > 0 && element.scriptPubKey.addresses[0] === req.params.addr && element.value === parseFloat(req.params.val)) {
           count += 1;
+          console.log("                    ▲ ▲ ▲ ▲ ▲ ▲ valid txid ▲ ▲ ▲ ▲ ▲ ▲");
           res.send({
             valid: true,
             valtxid: e[i],
@@ -51,17 +60,15 @@ router.get("/validtx/:addr/:val", (req, res) => {
       });
     }
     if (count === 0) {
+      console.log("valid txid is not exist!");
       res.send({
         valid: false,
       })
+    } else {
+      console.log("valid txid is exist!");
     }
   });
 });
-
-
-router.get("/", (req, res) => {
-  res.send("hi");
-})
 
 router.get("/getrawmempool", (req, res) => {
   var dataString = `{"jsonrpc":"1.0","id":"curltext","method":"getrawmempool","params":[]}`;
