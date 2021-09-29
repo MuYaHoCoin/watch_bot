@@ -30,12 +30,18 @@ router.get("/getConfirmations/:txid", (req, res) => {
       per = parseInt(data.result.confirmations/6*100);
       if(per >= 100) {
         console.log("This transaction is complete!");
+        res.send({
+          transaction_progress : "complete",
+          confirmations: data.result.confirmations
+        });
       } else {
         console.log("transaction progress : ", per, "%");
+        res.send({
+          transaction_progress : per,
+          confirmations: data.result.confirmations });
       }
       //console.log(data.result.vout[1].scriptPubKey.addresses);
       //console.log(data.result.vin[0].txid);
-      res.send({ confirmations: data.result.confirmations });
     }
   }; request(options, callback);
 });
